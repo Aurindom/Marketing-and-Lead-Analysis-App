@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'e:/Marketing and Lead Generation system/' -type f -name *.py)",
+      "mcp__codex__codex"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+pre_score_filter:
+  min_content_length: 200
+  no_website_high_reviews: 50
+  no_website_high_rating: 4.0
+  no_website_med_reviews: 10
+  no_website_med_rating: 3.5
+
+quality_gate:
+  confidence_floor: 0.3
+  hot_weak_data_threshold: 0.50
+
+api:
+  max_workers: 5
+
+enrichment:
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+
+inbound_detection:
+  score_ai_provider: 0.5
+  score_voip_provider: 0.25
+  score_other_provider: 0.15
+  score_ai_signal: 0.3
+  score_after_hours_signal: 0.3
+  score_ivr_signal: 0.25
+  score_manual_receptionist_signal: 0.25
+  score_voicemail_signal: 0.25
+  score_no_signal_fallback: 0.35
+  unknown_cutoff: 0.2

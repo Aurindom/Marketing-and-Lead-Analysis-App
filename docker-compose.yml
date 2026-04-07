@@ -1,0 +1,13 @@
+services:
+  pipeline:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - PLAYWRIGHT_ENABLED=true
+    volumes:
+      - ./output:/app/output
+    ports:
+      - "8001:8001"
+    shm_size: "1gb"
+    ipc: host

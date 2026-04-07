@@ -1,0 +1,102 @@
+Quality Hardcoding Fix List
+Date: 2026-04-06
+
+Purpose
+- Centralize runtime tuning constants into config (instead of code literals) to reduce scoring miscalibration risk and speed up tuning.
+
+Priority 1 - pre_score_filter.py (low risk, high value)
+- Move these constants to config:
+  - MIN_CONTENT_LENGTH = 200
+  - _NO_WEBSITE_HIGH_REVIEWS = 50
+  - _NO_WEBSITE_HIGH_RATING = 4.0
+  - _NO_WEBSITE_MED_REVIEWS = 10
+  - _NO_WEBSITE_MED_RATING = 3.5
+- Why:
+  - Directly affects filtering and no-website opportunity classification.
+
+Priority 2 - quality_gate.py (low risk, high value)
+- Move these constants to config:
+  - CONFIDENCE_FLOOR = 0.3
+  - HOT weak-data warning threshold = 0.50
+- Why:
+  - Controls quality flags and operator trust signals.
+
+Priority 3 - api.py thread pool size (low risk, operational tuning)
+- Move this constant to config:
+  - MAX_WORKERS = 5
+- Why:
+  - Throughput and latency tuning should not require code changes.
+
+Priority 4 - enrichment.py HTTP identity (low risk, operational hygiene)
+- Move User-Agent string to config (or at minimum a named constant in one place):
+  - Current hardcoded Chrome/124 UA will age out.
+- Why:
+  - Reduces stale identity risk and makes HTTP identity rotation explicit.
+
+Priority 5 - inbound_detection.py (medium risk, high calibration value)
+- Move classifier weights/thresholds to config:
+  - Provider/signal increments: 0.5, 0.25, 0.15, 0.3, etc.
+  - No-signal fallback score: 0.35
+  - Unknown cutoff: raw_confidence < 0.2
+- Why:
+  - Strong effect on inbound class distribution and downstream scoring.
+
+Priority 6 - scoring.py (medium/high risk, highest impact)
+- Move deterministic coefficients/thresholds to config:
+  - Dimension additive values (e.g., +3.5, +2.0, +1.5, +1.0, +0.5)
+  - Revenue leakage increments (e.g., 0.5 per negative review signal)
+  - Rating/review threshold rule for trust/service gap
+  - Confidence blend factors (currently 0.5 + inbound_conf * 0.4)
+- Why:
+  - Core ranking behavior depends on these numbers.
+
+Priority 7 - tests fixture cleanup (no runtime risk)
+- Replace realistic fixture labels with neutral placeholders across tests:
+  - Business/city names:
+    - "ATX Dental", "Family dentistry in Austin", "South Austin Dentist", "College Park"
+  - Contact details:
+    - "(512) 555-1234", "123 Main St", "hello@example.com"
+  - Real-looking website examples:
+    - "https://atxdental.com"
+  - Use generic replacements:
+    - "Test Business", "Test City, TS", "(555) 000-0000", "123 Test St", "test@example.com", "https://example.test"
+- Coverage note:
+  - Update fixtures in `tests/test_regressions.py`, `tests/test_concurrent_pipeline.py`, and `tests/test_analysis.py`.
+- Why:
+  - Reduces brittle tests and false confidence from real-world anchored strings.
+
+Recommended rollout
+1) Implement Priority 1 and 2 first (safest scoring/quality gains).
+2) Implement Priority 3 and 4 next (ops tuning and stale UA control).
+3) Implement Priority 5 next (classification calibration).
+4) Implement Priority 6 after baseline comparison (highest scoring impact).
+5) Do Priority 7 anytime in parallel.
+
+Implementation guardrails
+- Keep current defaults identical on first config migration (behavior-preserving).
+- No business-name/location-specific logic in runtime code.
+- Add/retain regression tests for unchanged baseline behavior.
+- Validate with Docker rebuild + full test run after each priority block.
+
+Fixed below:
+- P1 complete: `pre_score_filter.py` thresholds moved to `config/pipeline_config.yaml`.
+  - `min_content_length`, `no_website_high_reviews`, `no_website_high_rating`,
+    `no_website_med_reviews`, `no_website_med_rating`.
+- P2 complete: `quality_gate.py` thresholds moved to `config/pipeline_config.yaml`.
+  - `confidence_floor`, `hot_weak_data_threshold`.
+- P3 complete: `api.py` thread pool now uses config value.
+  - `MAX_WORKERS = pipeline_config.api.max_workers`.
+- P4 complete: `enrichment.py` User-Agent moved to `config/pipeline_config.yaml`.
+  - `HEADERS["User-Agent"]` now sourced from config.
+- P5 complete: `inbound_detection.py` classifier increments moved to config.
+  - provider/signal weights, no-signal fallback, and unknown cutoff are all config-driven.
+- P6 complete: scoring coefficients moved to `config/scoring_weights.yaml`.
+  - lead capture, booking friction, follow-up, revenue leakage, and AI receptionist coeffs.
+  - inbound automation maturity map values also moved to config.
+- Additional cleanup complete: API sorting weights now loaded from `scoring_weights.yaml` (no hardcoded `_DIM_WEIGHTS` literals).
+- Additional cleanup complete: `run_pipeline.py` worker count now uses `pipeline_config.yaml` instead of hardcoded `5`.
+- P7 complete: test fixture neutralization done across remaining files.
+  - replaced non-generic city and category literals with placeholders such as `Test City, TS` and `Test Category`.
+  - removed remaining named real-world references in test comments/fixtures.
+- Validation complete in Docker after rebuild.
+  - test result: `142 passed, 3 skipped`.
