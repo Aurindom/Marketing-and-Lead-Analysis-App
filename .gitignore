@@ -12,4 +12,5 @@ Thumbs.db
 .claude/
 *.md
 !INTERNAL_NOTES.md
+!README.md
 quality harcoding fixes.txt
