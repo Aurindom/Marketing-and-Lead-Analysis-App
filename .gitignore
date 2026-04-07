@@ -1,0 +1,11 @@
+.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+output/
+.pytest_cache/
+checkpoints/
+*.zip
+.DS_Store
+Thumbs.db

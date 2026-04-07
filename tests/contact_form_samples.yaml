@@ -1,0 +1,85 @@
+# Contact form detection regression samples.
+# Run with: LIVE_SAMPLES=1 pytest tests/test_contact_form_samples.py -v
+# Do not add to standard CI — each sample makes live HTTP requests.
+#
+# Before marking verified: true on any entry:
+#   1. Load the URL in a browser and confirm the expected_has_form value.
+#   2. Confirm where the form lives (homepage vs /contact vs other path).
+#   3. Pick stable URLs — long-lived businesses or well-known utilities.
+#
+# category values: homepage_form | internal_page_form | no_form | js_rendered_form
+
+samples:
+
+  # --- Has form: form tag present on the homepage ---
+
+  - label: "httpbin POST form"
+    url: "https://httpbin.org/forms/post"
+    category: homepage_form
+    expected_has_form: true
+    expected_form_page: "homepage"
+    verified: true
+    notes: "HTTP testing utility. Standard HTML form with submit control. Stable URL."
+
+  # Placeholder: add a real small business site where the contact form embeds
+  # directly on the homepage (not on /contact). Replace and set verified: true.
+  # - label: "PLACEHOLDER - small biz homepage form"
+  #   url: "https://..."
+  #   category: homepage_form
+  #   expected_has_form: true
+  #   expected_form_page: "homepage"
+  #   verified: false
+  #   notes: ""
+
+  # --- Has form: form is on an internal page, not the homepage ---
+
+  # Placeholder: add a real business where homepage is a landing page and the
+  # form lives at /contact, /contact-us, /request-appointment, etc.
+  # These are the most common false negative cases for this pipeline.
+  # - label: "PLACEHOLDER - internal /contact form"
+  #   url: "https://..."
+  #   category: internal_page_form
+  #   expected_has_form: true
+  #   expected_form_page: "/contact"
+  #   verified: false
+  #   notes: ""
+
+  # - label: "PLACEHOLDER - internal /contact-us form"
+  #   url: "https://..."
+  #   category: internal_page_form
+  #   expected_has_form: true
+  #   expected_form_page: "/contact-us"
+  #   verified: false
+  #   notes: ""
+
+  # --- Has form: JS-rendered via Elementor or Divi (requires Playwright) ---
+
+  # Placeholder: add a WordPress site using Divi or Elementor where the form
+  # is rendered by JS and invisible to plain httpx. A previously verified
+  # confirmed real-world example of this type from pipeline runs.
+  # - label: "PLACEHOLDER - Divi JS-rendered form"
+  #   url: "https://..."
+  #   category: js_rendered_form
+  #   expected_has_form: true
+  #   expected_form_page: "/contact"
+  #   requires_playwright: true
+  #   verified: false
+  #   notes: "PLAYWRIGHT_ENABLED=true required to detect this form"
+
+  # --- No form: site has no contact form anywhere ---
+
+  - label: "example.com - IANA placeholder"
+    url: "https://example.com"
+    category: no_form
+    expected_has_form: false
+    expected_form_page: null
+    verified: true
+    notes: "Standard IANA placeholder page. No form, no links, no content."
+
+  - label: "Wikipedia - Dentist article"
+    url: "https://en.wikipedia.org/wiki/Dentist"
+    category: no_form
+    expected_has_form: false
+    expected_form_page: null
+    verified: true
+    notes: "Informational article. No business contact form. Tests that content-rich pages without forms score correctly."

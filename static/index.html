@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ascent Intelligence</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3148;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 { font-size: 1.25rem; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+    header span { font-size: 0.8rem; color: #6b7280; margin-left: 4px; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .form-card {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 120px 160px;
+      gap: 16px;
+      align-items: end;
+    }
+
+    label { display: block; font-size: 0.78rem; font-weight: 600; color: #9ca3af; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0f1117;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus, select:focus { border-color: #6366f1; }
+    input::placeholder { color: #4b5563; }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #6366f1; color: #fff; width: 100%; }
+    .btn-primary:hover:not(:disabled) { background: #4f46e5; }
+    .btn-secondary { background: #1f2937; color: #d1d5db; border: 1px solid #374151; }
+    .btn-secondary:hover { background: #374151; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left { display: flex; gap: 8px; align-items: center; flex: 1; flex-wrap: wrap; }
+    .toolbar-right { display: flex; gap: 8px; align-items: center; }
+
+    .filter-group { display: flex; gap: 6px; align-items: center; }
+
+    .tier-btn {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: #1f2937;
+      color: #9ca3af;
+    }
+
+    .tier-btn.active-HOT  { background: #7f1d1d; color: #fca5a5; border-color: #ef4444; }
+    .tier-btn.active-WARM { background: #78350f; color: #fcd34d; border-color: #f59e0b; }
+    .tier-btn.active-COLD { background: #1e3a5f; color: #93c5fd; border-color: #3b82f6; }
+    .tier-btn.active-BLOCKED { background: #1f2937; color: #9ca3af; border-color: #6b7280; }
+    .tier-btn.active-NO_WEBSITE { background: #1a2e1a; color: #86efac; border-color: #22c55e; }
+
+    .search-input {
+      padding: 6px 12px;
+      background: #0f1117;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      width: 200px;
+      outline: none;
+    }
+
+    .search-input:focus { border-color: #6366f1; }
+
+    select.sort-select {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      width: auto;
+      background: #0f1117;
+    }
+
+    .summary-bar {
+      font-size: 0.82rem;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    .summary-bar strong { color: #d1d5db; }
+
+    .results-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: #1a1d2e;
+      border-radius: 12px;
+      border-left: 4px solid #374151;
+      padding: 20px 24px;
+      transition: border-color 0.15s;
+    }
+
+    .card-HOT  { border-left-color: #ef4444; }
+    .card-WARM { border-left-color: #f59e0b; }
+    .card-COLD { border-left-color: #3b82f6; }
+    .card-BLOCKED { border-left-color: #6b7280; }
+    .card-NO_WEBSITE { border-left-color: #22c55e; }
+
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .card-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .rank-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #6b7280;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 6px;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+    .business-name { font-size: 1.05rem; font-weight: 700; color: #fff; }
+
+    .tier-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+
+    .tier-HOT  { background: #7f1d1d; color: #fca5a5; }
+    .tier-WARM { background: #78350f; color: #fcd34d; }
+    .tier-COLD { background: #1e3a5f; color: #93c5fd; }
+    .tier-BLOCKED { background: #1f2937; color: #9ca3af; }
+    .tier-UNKNOWN { background: #1f2937; color: #6b7280; }
+    .tier-NO_WEBSITE { background: #1a2e1a; color: #86efac; }
+
+    .opportunity-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 6px;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+    .opportunity-HIGH   { background: #14532d; color: #86efac; }
+    .opportunity-MEDIUM { background: #78350f; color: #fcd34d; }
+    .opportunity-LOW    { background: #1f2937; color: #9ca3af; }
+
+    .card-meta { font-size: 0.82rem; color: #6b7280; display: flex; gap: 16px; flex-wrap: wrap; }
+    .card-meta a { color: #818cf8; text-decoration: none; }
+    .card-meta a:hover { text-decoration: underline; }
+
+    .outreach-angle {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: #0f1117;
+      border-left: 3px solid #6366f1;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #c7d2fe;
+      line-height: 1.5;
+    }
+
+    .outreach-label { font-size: 0.72rem; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+    .gaps-section { margin-top: 14px; }
+    .gaps-label { font-size: 0.72rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .gap-tag {
+      display: inline-block;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      color: #d1d5db;
+      margin: 3px 4px 3px 0;
+    }
+
+    .na-note { font-size: 0.82rem; color: #6b7280; font-style: italic; }
+
+    .scores-toggle {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: #6366f1;
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .scores-toggle:hover { color: #818cf8; }
+
+    .scores-section { margin-top: 12px; display: none; }
+    .scores-section.open { display: block; }
+
+    .dim-row { margin-bottom: 10px; }
+    .dim-label { font-size: 0.75rem; color: #9ca3af; margin-bottom: 3px; display: flex; justify-content: space-between; }
+    .dim-label span { color: #d1d5db; font-weight: 600; }
+
+    .bar-track { height: 6px; background: #0f1117; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: #6366f1; transition: width 0.3s; }
+    .bar-fill.conf-low { background: #374151; }
+    .bar-fill.conf-mid { background: #4f46e5; }
+    .bar-fill.conf-high { background: #6366f1; }
+
+    .dim-evidence { font-size: 0.72rem; color: #6b7280; margin-top: 3px; }
+
+    .errors-toggle {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #ef4444;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .errors-section { margin-top: 8px; display: none; }
+    .errors-section.open { display: block; }
+    .error-item { font-size: 0.78rem; color: #fca5a5; padding: 6px 10px; background: #1f0808; border-radius: 6px; margin-bottom: 4px; }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+
+    .spinner.active { display: block; }
+
+    .spinner-ring {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid #2d3148;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 48px; color: #6b7280; }
+    .error-banner { background: #1f0808; border: 1px solid #7f1d1d; border-radius: 8px; padding: 14px 18px; color: #fca5a5; font-size: 0.88rem; margin-bottom: 20px; display: none; }
+    .error-banner.active { display: block; }
+
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid > div:last-child { grid-column: span 2; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Ascent Intelligence</h1>
+  <span>Lead Scoring Pipeline</span>
+</header>
+
+<div class="container">
+
+  <div class="form-card">
+    <div class="form-grid">
+      <div>
+        <label for="niche">Niche</label>
+        <input id="niche" type="text" placeholder="e.g. dental" />
+      </div>
+      <div>
+        <label for="location">Location</label>
+        <input id="location" type="text" placeholder="e.g. Austin, TX" />
+      </div>
+      <div>
+        <label for="max_results">Results</label>
+        <input id="max_results" type="number" min="1" max="20" placeholder="e.g. 3" />
+      </div>
+      <div>
+        <label for="max_review_count">Max Reviews</label>
+        <input id="max_review_count" type="number" min="1" placeholder="e.g. 500" />
+      </div>
+      <div style="grid-column: span 4;">
+        <button id="run-btn" class="btn btn-primary" onclick="runAnalysis()">Run Analysis</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="error-banner" class="error-banner"></div>
+  <div id="spinner" class="spinner"><div class="spinner-ring"></div><div>Running pipeline...</div></div>
+
+  <div id="results-section" style="display:none">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filter-group" id="tier-filters"></div>
+        <input class="search-input" id="search-input" type="text" placeholder="Search by name..." oninput="applyFilters()" />
+      </div>
+      <div class="toolbar-right">
+        <select class="sort-select" id="sort-select" onchange="applyFilters()">
+          <option value="rank">Sort: Priority Rank</option>
+          <option value="score">Sort: Score</option>
+          <option value="name">Sort: Name A-Z</option>
+        </select>
+        <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+      </div>
+    </div>
+
+    <div id="summary-bar" class="summary-bar"></div>
+    <div id="results-grid" class="results-grid"></div>
+  </div>
+
+</div>
+
+<script>
+  let _allResults = [];
+  let _filteredResults = [];
+  let _meta = {};
+  let _activeTiers = new Set(["HOT", "WARM", "COLD", "BLOCKED", "NO_WEBSITE"]);
+
+  const DIM_LABELS = {
+    ai_receptionist_likelihood:   "AI Receptionist Likelihood",
+    inbound_automation_maturity:  "Inbound Automation Maturity",
+    lead_capture_maturity:        "Lead Capture Maturity",
+    booking_intake_friction:      "Booking / Intake Friction",
+    follow_up_weakness:           "Follow-up Weakness",
+    revenue_leakage_opportunity:  "Revenue Leakage Opportunity",
+    ascent_fit_score:             "Ascent Fit Score",
+  };
+
+  async function runAnalysis() {
+    const niche = document.getElementById("niche").value.trim();
+    const location = document.getElementById("location").value.trim();
+    const max_results = parseInt(document.getElementById("max_results").value) || 3;
+    const max_review_count = parseInt(document.getElementById("max_review_count").value) || 500;
+
+    if (!niche || !location) { showError("Niche and location are required."); return; }
+
+    setLoading(true);
+    hideError();
+
+    try {
+      const res = await fetch("/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ niche, location, max_results, max_review_count }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+      _allResults = data.results;
+      _meta = { niche: data.niche, location: data.location, total: data.total };
+      _activeTiers = new Set(["HOT", "WARM", "COLD", "BLOCKED", "NO_WEBSITE"]);
+      buildTierFilters();
+      applyFilters();
+      document.getElementById("results-section").style.display = "block";
+    } catch (e) {
+      showError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function buildTierFilters() {
+    const counts = { HOT: 0, WARM: 0, COLD: 0, BLOCKED: 0, NO_WEBSITE: 0 };
+    _allResults.forEach(r => {
+      if (r.data_blocked) counts.BLOCKED++;
+      else if (r.tier === "HOT") counts.HOT++;
+      else if (r.tier === "WARM") counts.WARM++;
+      else if (r.tier === "NO_WEBSITE") counts.NO_WEBSITE++;
+      else counts.COLD++;
+    });
+
+    const container = document.getElementById("tier-filters");
+    container.innerHTML = "";
+    [["HOT", "HOT"], ["WARM", "WARM"], ["COLD", "COLD"], ["NO_WEBSITE", "Direct Outreach"], ["BLOCKED", "BLOCKED"]].forEach(([key, label]) => {
+      if (counts[key] === 0) return;
+      const btn = document.createElement("button");
+      btn.className = `tier-btn active-${key}`;
+      btn.textContent = `${label} (${counts[key]})`;
+      btn.dataset.tier = key;
+      btn.onclick = () => toggleTier(key, btn);
+      container.appendChild(btn);
+    });
+  }
+
+  function toggleTier(tier, btn) {
+    if (_activeTiers.has(tier)) {
+      _activeTiers.delete(tier);
+      btn.className = "tier-btn";
+    } else {
+      _activeTiers.add(tier);
+      btn.className = `tier-btn active-${tier}`;
+    }
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const search = document.getElementById("search-input").value.toLowerCase();
+    const sort = document.getElementById("sort-select").value;
+
+    let filtered = _allResults.filter(r => {
+      const tierKey = r.data_blocked ? "BLOCKED" : (r.tier || "COLD");
+      if (!_activeTiers.has(tierKey)) return false;
+      if (search && !(r.name || "").toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      if (sort === "rank") return (a.priority_rank || 99) - (b.priority_rank || 99);
+      if (sort === "score") {
+        if (a.tier === "NO_WEBSITE" && b.tier !== "NO_WEBSITE") return 1;
+        if (b.tier === "NO_WEBSITE" && a.tier !== "NO_WEBSITE") return -1;
+        if (a.tier === "NO_WEBSITE" && b.tier === "NO_WEBSITE") {
+          const bandOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+          const ba = bandOrder[a.no_website_opportunity || "LOW"] ?? 2;
+          const bb = bandOrder[b.no_website_opportunity || "LOW"] ?? 2;
+          if (ba !== bb) return ba - bb;
+          return (b.review_count || 0) - (a.review_count || 0);
+        }
+        return weightedScore(b) - weightedScore(a);
+      }
+      if (sort === "name") return (a.name || "").localeCompare(b.name || "");
+      return 0;
+    });
+
+
+    document.getElementById("summary-bar").innerHTML =
+      `Showing <strong>${filtered.length}</strong> of <strong>${_meta.total}</strong> businesses &mdash; ${_meta.niche} in ${_meta.location}`;
+
+    _filteredResults = filtered;
+    const grid = document.getElementById("results-grid");
+    grid.innerHTML = "";
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="empty-state">No results match the current filters.</div>';
+      return;
+    }
+    filtered.forEach(r => grid.appendChild(buildCard(r)));
+  }
+
+  function weightedScore(r) {
+    if (!r.scores) return 0;
+    const W = { ai_receptionist_likelihood: 0.20, inbound_automation_maturity: 0.15, lead_capture_maturity: 0.15, booking_intake_friction: 0.15, follow_up_weakness: 0.10, revenue_leakage_opportunity: 0.15, ascent_fit_score: 0.10 };
+    return Object.entries(W).reduce((s, [k, w]) => s + (r.scores[k]?.score || 0) * (r.scores[k]?.confidence || 0) * w, 0);
+  }
+
+  function buildCard(r) {
+    const isNoWebsite = r.tier === "NO_WEBSITE";
+    const tierKey = r.data_blocked ? "BLOCKED" : (r.tier || "UNKNOWN");
+    const card = document.createElement("div");
+    card.className = `card card-${tierKey}`;
+
+    const tierLabel = r.data_blocked ? "BLOCKED" : isNoWebsite ? "Direct Outreach" : (r.tier || "UNKNOWN");
+    const rankBadge = r.priority_rank ? `<span class="rank-badge">#${r.priority_rank}</span>` : "";
+    const websiteLink = r.website ? `<a href="${r.website}" target="_blank" rel="noopener">${r.website}</a>` : "<span style='color:#6b7280'>No website</span>";
+    const fitScore = r.scores ? weightedScore(r).toFixed(2) : "-";
+
+    let opportunityBadge = "";
+    if (isNoWebsite && r.no_website_opportunity) {
+      opportunityBadge = `<span class="opportunity-badge opportunity-${r.no_website_opportunity}">${r.no_website_opportunity}</span>`;
+    }
+
+    let gapsHtml = "";
+    if (r.data_blocked) {
+      gapsHtml = `<div class="gaps-section"><div class="gaps-label">Gaps</div><span class="na-note">N/A (site blocked)</span></div>`;
+    } else if (isNoWebsite) {
+      gapsHtml = `<div class="gaps-section"><div class="gaps-label">Gaps</div><span class="na-note">N/A (no website available)</span></div>`;
+    } else if (r.skip_scoring) {
+      gapsHtml = `<div class="gaps-section"><div class="gaps-label">Gaps</div><span class="na-note">N/A (insufficient web data)</span></div>`;
+    } else if (r.gaps && r.gaps.length > 0) {
+      gapsHtml = `<div class="gaps-section"><div class="gaps-label">Gaps</div>${r.gaps.map(g => `<span class="gap-tag">${g}</span>`).join("")}</div>`;
+    }
+
+    let outreachHtml = "";
+    if (r.suggested_outreach_angle && (tierKey === "HOT" || tierKey === "WARM" || isNoWebsite)) {
+      outreachHtml = `<div class="outreach-angle"><div class="outreach-label">Outreach Angle</div>${r.suggested_outreach_angle}</div>`;
+    }
+
+    const uid = Math.random().toString(36).slice(2);
+
+    let scoresHtml = "";
+    if (r.scores) {
+      const rows = Object.entries(DIM_LABELS).map(([key, label]) => {
+        const dim = r.scores[key];
+        if (!dim) return "";
+        const pct = Math.round(dim.score * 10);
+        const confClass = dim.confidence < 0.4 ? "conf-low" : dim.confidence < 0.7 ? "conf-mid" : "conf-high";
+        const evidenceText = dim.evidence && dim.evidence.length > 0 ? dim.evidence.slice(0, 2).join(" | ") : "";
+        return `
+          <div class="dim-row">
+            <div class="dim-label">${label} <span>${dim.score.toFixed(1)} <small style="color:#6b7280">(conf ${Math.round(dim.confidence * 100)}%)</small></span></div>
+            <div class="bar-track"><div class="bar-fill ${confClass}" style="width:${pct}%"></div></div>
+            ${evidenceText ? `<div class="dim-evidence">${evidenceText}</div>` : ""}
+          </div>`;
+      }).join("");
+
+      scoresHtml = `
+        <div class="scores-toggle" onclick="toggleSection('scores-${uid}', this)">
+          &gt; View dimension scores
+        </div>
+        <div class="scores-section" id="scores-${uid}">${rows}</div>`;
+    }
+
+    let errorsHtml = "";
+    if (r.errors && r.errors.length > 0) {
+      errorsHtml = `
+        <div class="errors-toggle" onclick="toggleSection('errors-${uid}', this)">
+          [!] ${r.errors.length} pipeline error(s)
+        </div>
+        <div class="errors-section" id="errors-${uid}">
+          ${r.errors.map(e => `<div class="error-item">${e}</div>`).join("")}
+        </div>`;
+    }
+
+    const phoneDisplay = isNoWebsite && r.phone
+      ? `<span style="color:#86efac;font-weight:600">${r.phone}</span>`
+      : "";
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">
+          ${rankBadge}
+          <span class="business-name">${r.name}</span>
+          <span class="tier-badge tier-${tierKey}">${tierLabel}</span>
+          ${opportunityBadge}
+        </div>
+        <div style="font-size:0.85rem;color:#6b7280">${isNoWebsite ? `${r.rating || "-"} stars | ${r.review_count || 0} reviews` : `Score: <strong style="color:#d1d5db">${fitScore}</strong>`}</div>
+      </div>
+      <div class="card-meta">
+        <span>${r.location || "-"}</span>
+        ${isNoWebsite ? phoneDisplay : `<span>${websiteLink}</span>`}
+        ${!isNoWebsite ? `<span>Inbound: ${r.inbound || "-"}</span>` : ""}
+        ${r.contact_form_page ? `<span style="color:#6ee7b7">Form on ${r.contact_form_page}</span>` : ""}
+      </div>
+      ${outreachHtml}
+      ${gapsHtml}
+      ${scoresHtml}
+      ${errorsHtml}
+    `;
+
+    return card;
+  }
+
+  function toggleSection(id, el) {
+    const section = document.getElementById(id);
+    section.classList.toggle("open");
+    if (section.classList.contains("open")) {
+      el.textContent = el.textContent.replace("> View", "v View");
+    } else {
+      el.textContent = el.textContent.replace("v View", "> View");
+    }
+  }
+
+  function exportCSV() {
+    if (!_filteredResults.length) return;
+    const cols = ["rank", "tier", "no_website_opportunity", "name", "location", "website", "phone", "rating", "review_count", "inbound_classification", "top_3_gaps", "outreach_angle", "fit_score", "fit_confidence", "contact_form_page", "data_blocked", "skip_scoring"];
+    const rows = [cols.join(",")];
+
+    _filteredResults.forEach(r => {
+      const fit = r.scores ? r.scores.ascent_fit_score : null;
+      const gaps = (r.gaps || []).slice(0, 3).join(" | ").replace(/,/g, ";");
+      const angle = (r.suggested_outreach_angle || "").replace(/,/g, ";").replace(/\n/g, " ");
+      rows.push([
+        r.priority_rank ?? "",
+        r.data_blocked ? "BLOCKED" : (r.tier || ""),
+        r.no_website_opportunity || "",
+        `"${(r.name || "").replace(/"/g, '""')}"`,
+        `"${(r.location || "").replace(/"/g, '""')}"`,
+        r.website || "",
+        r.phone || "",
+        r.rating ?? "",
+        r.review_count ?? "",
+        r.inbound || "",
+        `"${gaps}"`,
+        `"${angle}"`,
+        fit ? fit.score.toFixed(2) : "",
+        fit ? fit.confidence.toFixed(2) : "",
+        r.contact_form_page || "",
+        r.data_blocked ? "true" : "false",
+        r.skip_scoring ? "true" : "false",
+      ].join(","));
+    });
+
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ascent_${_meta.niche}_${_meta.location}_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function setLoading(v) {
+    document.getElementById("spinner").className = v ? "spinner active" : "spinner";
+    document.getElementById("run-btn").disabled = v;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("error-banner");
+    el.textContent = msg;
+    el.className = "error-banner active";
+  }
+
+  function hideError() {
+    document.getElementById("error-banner").className = "error-banner";
+  }
+</script>
+
+</body>
+</html>

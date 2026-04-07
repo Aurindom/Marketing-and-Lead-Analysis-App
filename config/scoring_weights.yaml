@@ -1,0 +1,75 @@
+dimensions:
+  ai_receptionist_likelihood:
+    weight: 0.20
+  inbound_automation_maturity:
+    weight: 0.15
+  lead_capture_maturity:
+    weight: 0.15
+  booking_intake_friction:
+    weight: 0.15
+  follow_up_weakness:
+    weight: 0.10
+  revenue_leakage_opportunity:
+    weight: 0.15
+  ascent_fit_score:
+    weight: 0.10
+
+tiers:
+  HOT: 5.0
+  WARM: 3.8
+
+coefficients:
+  ai_receptionist:
+    base: 5.0
+    voicemail_dependent: 3.0
+    no_meaningful_automation: 3.5
+    manual_receptionist: 2.0
+    basic_ivr: 1.5
+    after_hours_automation: -1.0
+    ai_assisted: -3.0
+    no_after_hours_bonus: 1.0
+    no_live_chat_bonus: 0.5
+    confidence_base: 0.4
+    confidence_inbound_weight: 0.6
+  inbound_automation:
+    likely_no_meaningful_automation: 9.5
+    likely_voicemail_dependent: 8.0
+    likely_manual_receptionist: 6.0
+    likely_basic_ivr: 4.0
+    likely_after_hours_automation: 2.5
+    likely_ai_assisted: 1.0
+    unknown_insufficient_evidence: 5.0
+    negative_review_bonus_per_signal: 0.5
+  lead_capture:
+    no_contact_form: 2.5
+    no_email_capture: 2.0
+    cta_absent: 3.0
+    cta_weak: 1.5
+    no_booking: 1.5
+    no_trust_badges: 0.5
+  booking_friction:
+    no_booking: 4.0
+    outdated_website: 2.0
+    poor_mobile: 2.0
+    no_form_or_booking: 2.0
+    no_cta: 1.0
+  follow_up:
+    no_email_capture: 3.0
+    no_review_widget: 2.0
+    no_blog: 1.5
+    no_social: 1.5
+    no_testimonials: 1.0
+    no_team_page: 1.0
+  revenue_leakage:
+    per_gap: 0.7
+    per_gap_cap: 5.0
+    no_after_hours: 1.5
+    voicemail_no_automation: 2.0
+    negative_review_per_signal: 0.5
+    negative_review_cap: 1.5
+    low_rating_bonus: 1.0
+    low_rating_threshold: 4.0
+    low_rating_min_reviews: 20
+    confidence_base: 0.5
+    confidence_inbound_weight: 0.4
+    confidence_cap: 0.9

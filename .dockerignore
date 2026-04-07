@@ -1,0 +1,12 @@
+.env
+.git
+.gitignore
+.pytest_cache
+.claude
+__pycache__
+*.pyc
+*.pyo
+venv/
+output/
+INTERNAL_NOTES.md
+*.log
