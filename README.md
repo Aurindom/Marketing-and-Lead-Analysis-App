@@ -57,14 +57,14 @@ The pipeline is a **LangGraph DAG** — 6 nodes, executed in sequence with Nodes
         v                                 v
   NODE 3: ANALYSIS              NODE 4: INBOUND DETECTION
   (parallel)                    (parallel)
-  Claude Sonnet tool-use        Fingerprinting + Claude + Tavily reviews
+  LLM agent tool-use            Fingerprinting + LLM agent + Tavily reviews
   30+ binary/categorical        Classifies how the business handles
   signals + gap identification  inbound calls and leads
         |                                 |
         └──────────────┬──────────────────┘
                        v
              NODE 5: SCORING ENGINE
-             7 dimensions, deterministic (dims 1-6) + Claude (dim 7)
+             7 dimensions, deterministic (dims 1-6) + LLM agent (dim 7)
              Weights loaded from scoring_weights.yaml
                        |
                        v
@@ -84,13 +84,13 @@ Searches Google Maps via SerpAPI. Up to 3 pages (60 candidates) per query. Resul
 Fetches each business website using `httpx`. Extracts page text, `<script>` sources, form elements, booking/CTA links, and chat widget embeds. If the site is JS-rendered or returns a block response (403/429/503), it falls back to Playwright (headless Chromium) to retrieve the rendered DOM. Sites that fail both paths are marked `DATA_BLOCKED`.
 
 ### Node 3 — Analysis
-A single Claude Sonnet call in tool-use mode. Outputs 30+ structured signals from the enriched page content — booking tool presence, contact form status, CTA strength, mobile UX quality, after-hours copy, and a list of identified revenue/operational gaps. Pydantic validates the output; failed validation triggers one retry before falling back to partial scoring.
+A single LLM agent call in tool-use mode. Outputs 30+ structured signals from the enriched page content — booking tool presence, contact form status, CTA strength, mobile UX quality, after-hours copy, and a list of identified revenue/operational gaps. Pydantic validates the output; failed validation triggers one retry before falling back to partial scoring.
 
 ### Node 4 — Inbound Detection
 Runs in parallel with Node 3. Three-method approach:
 
 1. **Deterministic fingerprinting** — matches known provider script patterns (Calendly, Acuity, Drift, Intercom, Tidio, Smith.ai, RingCentral, etc.)
-2. **Claude probabilistic classification** — classifies the inbound setup into one of 7 categories
+2. **LLM probabilistic classification** — classifies the inbound setup into one of 7 categories
 3. **Tavily review mining** — searches for review signals like "voicemail", "no answer", "wait time", "answered right away"
 
 **Inbound classification categories:**
@@ -103,7 +103,7 @@ Runs in parallel with Node 3. Three-method approach:
 - `unknown_insufficient_evidence`
 
 ### Node 5 — Scoring Engine
-Scores across 7 dimensions. Dimensions 1–6 are fully deterministic — same input always produces the same score. Dimension 7 (Ascent Fit) is a Claude composite judgment. All weights are externalized in `config/scoring_weights.yaml` and can be tuned without touching code.
+Scores across 7 dimensions. Dimensions 1–6 are fully deterministic — same input always produces the same score. Dimension 7 (Ascent Fit) is a composite LLM judgment. All weights are externalized in `config/scoring_weights.yaml` and can be tuned without touching code.
 
 **The 7 Dimensions:**
 
@@ -115,7 +115,7 @@ Scores across 7 dimensions. Dimensions 1–6 are fully deterministic — same in
 | 4 | Booking / Intake Friction | 15% | How hard it is for a customer to book or inquire |
 | 5 | Follow-Up Weakness | 10% | Missing email capture, review widgets, social presence |
 | 6 | Revenue Leakage Opportunity | 15% | Identified gaps that cost the business money |
-| 7 | Ascent Fit Score | 10% | Claude's composite judgment of overall fit |
+| 7 | Ascent Fit Score | 10% | LLM composite judgment of overall fit |
 
 Each dimension returns `{ score, confidence, evidence[] }`. Confidence reflects data quality — how many signals were actually found versus expected. Low-confidence dimensions (below 0.3) are automatically down-weighted.
 
@@ -156,7 +156,7 @@ All external API calls are wrapped with `asyncio.Semaphore` to prevent quota exh
 Contact form detection returns `present`, `absent`, or `unknown` — never a false negative. If the check could not be completed (Playwright unavailable, timeout), the gap is suppressed from output rather than falsely reported as missing. A `contact_form_check_had_errors` flag is set on the record.
 
 ### Proxy removal on startup
-Any system-level HTTP proxy environment variables are stripped on API startup to prevent proxy interference with direct API calls to SerpAPI, Anthropic, and Tavily.
+Any system-level HTTP proxy environment variables are stripped on API startup to prevent proxy interference with direct API calls to external services.
 
 ---
 
@@ -235,7 +235,7 @@ Key environment variables:
 |-------|-------|
 | Pipeline orchestration | LangGraph |
 | API | FastAPI + Pydantic v2 |
-| LLM | Claude Sonnet (Anthropic) — tool-use mode |
+| LLM | Large language model agent — tool-use mode |
 | Sourcing | SerpAPI (Google Maps) |
 | Enrichment | httpx, BeautifulSoup, Playwright |
 | Supplementary search | Tavily |
@@ -248,7 +248,7 @@ Key environment variables:
 ## Known Limitations
 
 - Sites behind Cloudflare or DataDome will block even Playwright. Records land in `DATA_BLOCKED` and require manual review.
-- The LLM-generated Ascent Fit Score (dim-7) defaults to 5.0 with 0.0 confidence if the Anthropic API is unreachable. The other 6 dimensions still score normally.
+- The LLM-generated Ascent Fit Score (dim-7) defaults to 5.0 with 0.0 confidence if the LLM API is unreachable. The other 6 dimensions still score normally.
 - Inbound classification returns `unknown_insufficient_evidence` when neither reviews nor website content contain enough signals. Scores default to mid-range (5.0) — treat these cautiously.
 - Sourcing caps at 3 pages (~60 candidates) per query. High-competition markets may surface fewer true independents.
 - `NO_WEBSITE` leads use opportunity bands (HIGH/MEDIUM/LOW) based purely on Google data, not the 7-dimension scoring model.
