@@ -9,3 +9,7 @@ checkpoints/
 *.zip
 .DS_Store
 Thumbs.db
+.claude/
+*.md
+!INTERNAL_NOTES.md
+quality harcoding fixes.txt
