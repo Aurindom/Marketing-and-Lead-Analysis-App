@@ -167,8 +167,8 @@ Analyze a single niche + location combination. Returns ranked results with full 
 
 ```json
 {
-  "niche": "dental",
-  "location": "Austin, TX",
+  "niche": "plumbing",
+  "location": "Phoenix, AZ",
   "max_results": 5,
   "max_review_count": 500,
   "source_backend": "serpapi"
